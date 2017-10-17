@@ -1,7 +1,7 @@
 from spectra import const
+from spectra.resourse_parsers.proc import ProcessInfo
 from spectra.runners.ssh_runner import SSHRunner
 from spectra.runners.local_runner import LocalRunner
-
 
 class RunnerManager(object):
     def __init__(self):
@@ -18,8 +18,18 @@ class RunnerManager(object):
 
         raise Exception("Runner Type not implemented: {}".format(str(type)))
 
-    def run_script(self, target, fn):
+    @staticmethod
+    def prepare_script(resource_type):
+        # TODO: parse resource type, hardcoded proc so far
+        _fn_instance = ProcessInfo.get_target_proc_info
+        return _fn_instance
+
+    def run_script(self, target, dict):
+        # TODO: parse target and prepare runner
         _runner = self.prepare_runner()
+
+        # TODO: parse dict and get corresponding script types
+        _script = self.prepare_script(const.TYPE_RESOURCE_PROCESS)
 
         _result = _runner.query_resource()
         return _result

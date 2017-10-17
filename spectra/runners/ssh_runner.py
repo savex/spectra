@@ -1,7 +1,6 @@
 import os
 import subprocess
 
-from spectra.resourse_parsers.proc import ProcessInfo
 
 # all functions is just a sample yet.
 class SSHRunner(object):
@@ -19,9 +18,8 @@ class SSHRunner(object):
     def run_python_script(self, data):
         pass
 
-    def query_resource(self, dict):
+    def query_resource(self, fn_instance):
         # TODO: parse dict
-        _fn_instance = ProcessInfo.get_target_proc_info
 
         # do get process info on remote host
         pass
