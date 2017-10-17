@@ -24,5 +24,5 @@ class SSHRunner(object):
         # do get process info on remote host
         pass
 
-    def get_resource_info_by_list(self, list):
+    def get_resource_info_by_list(self, resource_list):
         pass

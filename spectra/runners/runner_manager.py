@@ -3,6 +3,7 @@ from spectra.resourse_parsers.proc import ProcessInfo
 from spectra.runners.ssh_runner import SSHRunner
 from spectra.runners.local_runner import LocalRunner
 
+
 class RunnerManager(object):
     def __init__(self):
         self.default_ssh_runner = SSHRunner()
@@ -24,7 +25,7 @@ class RunnerManager(object):
         _fn_instance = ProcessInfo.get_target_proc_info
         return _fn_instance
 
-    def run_script(self, target, dict):
+    def run_script(self, target, resource_list):
         # TODO: parse target and prepare runner
         _runner = self.prepare_runner()
 

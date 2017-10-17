@@ -10,9 +10,9 @@ class LocalRunner(object):
     def prepare_runner(self):
         pass
 
-    def query_resource(self, dict):
+    def query_resource(self, resource_dict):
         pass
 
-    def get_resource_info_by_list(self, list):
+    def get_resource_info_by_list(self, resource_list):
         # identify resource type and prepare function
         pass
