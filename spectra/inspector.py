@@ -3,6 +3,7 @@ import sys
 import argparse
 
 from spectra.utils.config import InspectorConfigFile
+from spectra.runners.runner_manager import RunnerManager
 
 pkg_dir = os.path.dirname(__file__)
 pkg_dir = os.path.normpath(pkg_dir)
@@ -44,6 +45,9 @@ def inspector_cli_main():
     # collect info mode
 
     # inspect mode
+    run_manager = RunnerManager()
+    fn = help_message
+    run_manager.run_script("127.0.0.1", fn)
 
     # diff mode
 
