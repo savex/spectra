@@ -18,7 +18,7 @@ class SSHRunner(object):
     def run_python_script(self, data):
         pass
 
-    def query_resource(self, fn_instance):
+    def query_resource(self, target, fn_instance):
         # TODO: parse dict
 
         # do get process info on remote host

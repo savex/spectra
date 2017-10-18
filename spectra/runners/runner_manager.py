@@ -32,5 +32,9 @@ class RunnerManager(object):
         # TODO: parse dict and get corresponding script types
         _script = self.prepare_script(const.TYPE_RESOURCE_PROCESS)
 
-        _result = _runner.query_resource()
+        _result = _runner.query_resource(_script)
+
+        # check result for 200, 201, 301, 404, 403
+        result = _result
+
         return _result
