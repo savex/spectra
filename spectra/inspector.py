@@ -36,6 +36,10 @@ def inspector_cli_main():
     args = parser.parse_args()
 
     # Init Config
+    _config_file_path = os.path.join(pkg_dir, 'etc', 'inspector.conf')
+    if args.config_file:
+        _config_file_path = args.config_file
+    config = InspectorConfigFile(_config_file_path)
 
     config = InspectorConfig()
 
