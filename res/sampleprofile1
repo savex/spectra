@@ -1,0 +1,5 @@
+[system_info]
+bash_execute="sysctl -n machdep.cpu.brand_string"
+
+[nova]
+process_info=nova

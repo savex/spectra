@@ -2,8 +2,9 @@ import os
 import sys
 import argparse
 
-from spectra.utils.config import InspectorConfigFile
+from spectra.utils.config_file import InspectorConfig
 from spectra.runners.runner_manager import RunnerManager
+from spectra.db.sqlite import DBStorage
 
 pkg_dir = os.path.dirname(__file__)
 pkg_dir = os.path.normpath(pkg_dir)
@@ -17,7 +18,7 @@ class MyParser(argparse.ArgumentParser):
 
 
 def help_message():
-    print"Please, supply this tool with a correct option:\n" \
+    print"Please, execute this tool with a correct option:\n" \
          " 'collect' option to gather all info to be looked after \n" \
          " 'inspect' option to test current situation and timestamp it \n" \
          " 'diff' option to see what has changed since last '-nX' times \n" \
@@ -35,19 +36,20 @@ def inspector_cli_main():
     args = parser.parse_args()
 
     # Init Config
-    _config_file_path = os.path.join(pkg_dir, 'etc', 'inspector.conf')
-    if args.config_file:
-        _config_file_path = args.config_file
-    config = InspectorConfigFile(_config_file_path)
 
-    # do something for init :)
+    config = InspectorConfig()
+
+    # load checkpoints from DB that was collected so far
+    _storage = DBStorage()
+    all_checks = _storage.get_all_profile_checkpoints()
 
     # collect info mode
 
     # inspect mode
     run_manager = RunnerManager()
-    fn = help_message
-    run_manager.run_script("127.0.0.1", fn)
+    for check in all_checks:
+        _result = run_manager.run_script("127.0.0.1", check)
+        _storage.in
 
     # diff mode
 

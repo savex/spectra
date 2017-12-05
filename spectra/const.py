@@ -6,8 +6,8 @@ import itertools
 
 
 _cnt = itertools.count()
-TYPE_REMOTE_SSH = next(_cnt)
-TYPE_LOCAL = next(_cnt)
+TYPE_RUNNER_SSH = next(_cnt)
+TYPE_RUNNER_LOCAL = next(_cnt)
 
 TYPE_RESOURCE_PROCESS = next(_cnt)
 TYPE_RESOURCE_FILE = next(_cnt)
