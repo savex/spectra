@@ -19,7 +19,7 @@ class SSHRunner(object):
         self.file_ = file_
         self.host = host
         # TODO: implement method get_configuration in utils
-        # or use existibg config file which stores private key path and user
+        # or use existing config file which stores private key path and user
         self._config = utils.get_configuration(__file__)
         self.priv_key = self._config['priv_key_path']
         self.user = self._config['user']
@@ -48,7 +48,8 @@ class SSHRunner(object):
     def _ssh_command_add_auth_arguments(self, cmd):
         return cmd + ['-i', self.priv_key]
 
-    def _ssh_command_add_extra_arguments(self, cmd):
+    @staticmethod
+    def _ssh_command_add_extra_arguments(cmd):
         return cmd + [
             '-v',
             '-o', 'BatchMode=yes',
@@ -60,12 +61,15 @@ class SSHRunner(object):
     def _ssh_command_add_destination(self, cmd):
         return cmd + ['@'.join((self.user, self.host))]
 
-    def _ssh_command_add_command(self, cmd):
-        # TODO: python value hardcoded. Need to add shell parser from file name or another logic
+    @staticmethod
+    def _ssh_command_add_command(cmd):
+        # TODO: python value hardcoded.
+        # Need to add shell parser from file name or another logic
         cmd += ['python']
         return cmd
 
-    def _subprocess_add_args(self, args):
+    @staticmethod
+    def _subprocess_add_args(args):
         args['stdin'] = subprocess.PIPE
         args['stdout'] = subprocess.PIPE
         return args
