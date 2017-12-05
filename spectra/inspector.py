@@ -36,11 +36,6 @@ def inspector_cli_main():
     args = parser.parse_args()
 
     # Init Config
-    _config_file_path = os.path.join(pkg_dir, 'etc', 'inspector.conf')
-    if args.config_file:
-        _config_file_path = args.config_file
-    config = InspectorConfigFile(_config_file_path)
-
     config = InspectorConfig()
 
     # load checkpoints from DB that was collected so far
@@ -53,7 +48,7 @@ def inspector_cli_main():
     run_manager = RunnerManager()
     for check in all_checks:
         _result = run_manager.run_script("127.0.0.1", check)
-        _storage.in
+        _storage.add_check(check['check_path'], _result)
 
     # diff mode
 

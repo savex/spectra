@@ -25,7 +25,7 @@ class DBStorage(object):
         # collected values
         pass
 
-    def add_check_to_(self):
+    def add_check(self, check_path, value):
         pass
 
     def get_all_profile_checkpoints(self):
