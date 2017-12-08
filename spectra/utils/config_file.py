@@ -1,14 +1,16 @@
 import ConfigParser
 import os
 
+import spectra
+
 pkg_dir = os.path.dirname(__file__)
-pkg_dir = os.path.join(pkg_dir, os.path.pardir)
+pkg_dir = os.path.join(pkg_dir, os.path.pardir, os.path.pardir)
 pkg_dir = os.path.normpath(pkg_dir)
 
 _default_config_path = os.path.join(pkg_dir, 'etc', 'inspector.conf')
 
 
-class _ConfigFileBase:
+class ConfigFileBase(object):
     _truth = ['true', '1', 't', 'y', 'yes', 'yeah', 'yup',
               'certainly', 'uh-huh']
     _config = None
@@ -27,12 +29,17 @@ class _ConfigFileBase:
         self._config.read(_path)
 
     @staticmethod
-    def _ensure_abs_path(_path):
-        # make sure it is absolute
-        if not os.path.isabs(_path):
-            return os.path.join(pkg_dir, _path)
+    def _ensure_abs_path(path):
+        if path.startswith('~'):
+            path = os.path.expanduser(path)
         else:
-            return _path
+            path = path
+
+        # make sure it is absolute
+        if not os.path.isabs(path):
+            return os.path.join(pkg_dir, path)
+        else:
+            return path
 
     def _ensure_boolean(self, _value):
         if _value.lower() in self._truth:
@@ -44,9 +51,9 @@ class _ConfigFileBase:
         return self._config.get(self._section_name, key)
 
 
-class InspectorConfig(object, _ConfigFileBase):
+class InspectorConfig(ConfigFileBase):
     def __init__(self):
-        super(InspectorConfig, self).__init__("InspectorConfig")
+        spectra.utils.configs.ConfigFileBase.__init__(self, "InspectorConfig")
 
     def get_default_host_origin(self):
         # get path
@@ -56,7 +63,7 @@ class InspectorConfig(object, _ConfigFileBase):
         return self.get_value('default_inspection_set')
 
 
-class ResourceParsersConfig(object, _ConfigFileBase):
+class ResourceParsersConfig(ConfigFileBase):
     def __init__(self):
         super(ResourceParsersConfig, self).__init__("ResourceParsers")
 
@@ -70,15 +77,16 @@ class ResourceParsersConfig(object, _ConfigFileBase):
         return self.get_value("file")
 
 
-class DBConfig(object, _ConfigFileBase):
+class DBConfig(ConfigFileBase):
     def __init__(self):
         super(DBConfig, self).__init__("db")
 
     def get_db_filename(self):
-        return self.get_value("db_file")
+        _file = self.get_value("db_file")
+        return self._ensure_abs_path(_file)
 
 
-class SSHConfig(object, _ConfigFileBase):
+class SSHConfig(ConfigFileBase):
     def __init__(self):
         super(SSHConfig, self).__init__("ssh")
 

@@ -29,7 +29,7 @@ def help_message():
 
 # main
 def inspector_cli_main():
-    parser = MyParser(prog="Spectra:Inspector CLI Util")
+    parser = MyParser(prog="Spectra:Inspector CLI util")
 
     # arguments
 
@@ -40,6 +40,7 @@ def inspector_cli_main():
 
     # load checkpoints from DB that was collected so far
     _storage = DBStorage()
+    _storage.create_all_tables()
     all_checks = _storage.get_all_profile_checkpoints()
 
     # collect info mode

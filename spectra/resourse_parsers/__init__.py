@@ -1,3 +1,3 @@
-import spectra.resourse_parsers.proc
+from spectra.resourse_parsers import proc
 
-process_info = spectra.resourse_parsers.proc.get_target_proc_info
+process_info = proc.get_target_proc_info
