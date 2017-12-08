@@ -1,19 +1,8 @@
-import os
 import sqlite3
 
 from spectra.utils.config_file import DBConfig
 
 db_config = DBConfig()
-
-
-def ensure_connected(fn):
-    def connection_wrapper(self=None, sql=''):
-        if self._connection is None:
-            self._connect()
-            result = fn(self, sql)
-            self._close()
-        return result
-    return connection_wrapper
 
 
 class DBStorage(object):
@@ -24,29 +13,21 @@ class DBStorage(object):
 
     def __init__(self, autocommit=True):
         self.db_path = db_config.get_db_filename()
-        self._connection = None
-        self._cursor = None
-        self.autocommit = autocommit
-
-    def _connect(self):
         self._connection = sqlite3.connect(self.db_path)
-        self._cursor = self._connection.cursor()
+        self.autocommit = autocommit
 
     def _close(self):
         self._connection.close()
         self._connection = None
-        self._cursor = None
 
-    @ensure_connected
     def _execute_query(self, _sql):
-        _res = self._cursor.execute(_sql)
+        _res = self._connection.execute(_sql)
         if self.autocommit:
             self._connection.commit()
         return _res.fetchall()
 
-    @ensure_connected
     def _execute_ro_query(self, _sql):
-        return self._cursor.execute(_sql).fetchall()
+        return self._connection.execute(_sql).fetchall()
 
     def _table_exists(self, table_name):
         _sql = "select name from sqlite_master " \

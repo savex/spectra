@@ -1,8 +1,6 @@
 import ConfigParser
 import os
 
-import spectra
-
 pkg_dir = os.path.dirname(__file__)
 pkg_dir = os.path.join(pkg_dir, os.path.pardir, os.path.pardir)
 pkg_dir = os.path.normpath(pkg_dir)
@@ -53,7 +51,7 @@ class ConfigFileBase(object):
 
 class InspectorConfig(ConfigFileBase):
     def __init__(self):
-        spectra.utils.configs.ConfigFileBase.__init__(self, "InspectorConfig")
+        super(InspectorConfig, self).__init__("InspectorConfig")
 
     def get_default_host_origin(self):
         # get path
@@ -61,6 +59,10 @@ class InspectorConfig(ConfigFileBase):
 
     def get_default_inspection_set(self):
         return self.get_value('default_inspection_set')
+
+    def get_logfile_path(self):
+        _path = self.get_value('logfile')
+        return self._ensure_abs_path(_path)
 
 
 class ResourceParsersConfig(ConfigFileBase):
@@ -92,3 +94,9 @@ class SSHConfig(ConfigFileBase):
 
     def get_options(self):
         return self.get_value("default_options")
+
+
+inspector_config = InspectorConfig()
+resource_parsers_config = ResourceParsersConfig()
+db_config = DBConfig()
+ssh_config = SSHConfig()

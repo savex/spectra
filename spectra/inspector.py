@@ -2,7 +2,8 @@ import os
 import sys
 import argparse
 
-from spectra.utils.config_file import InspectorConfig
+import spectra
+
 from spectra.runners.runner_manager import RunnerManager
 from spectra.db.sqlite import DBStorage
 
@@ -29,14 +30,18 @@ def help_message():
 
 # main
 def inspector_cli_main():
-    parser = MyParser(prog="Spectra:Inspector CLI util")
+    _title = "Spectra:Inspector CLI util"
+    parser = MyParser(prog=_title)
+
+    log = spectra.utils.logger.shell_logger
+    log.info(_title)
 
     # arguments
 
     args = parser.parse_args()
 
     # Init Config
-    config = InspectorConfig()
+    config = spectra.utils.configs.inspector_config
 
     # load checkpoints from DB that was collected so far
     _storage = DBStorage()
