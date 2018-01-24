@@ -7,8 +7,6 @@ configs = config_file
 
 logger = logger
 
-logger.setup_loggers(log_fname=configs.inspector_config.get_logfile_path())
-
 
 def get_configuration(file):
     # TODO: select config based on filename

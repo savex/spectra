@@ -1,7 +1,5 @@
 import logging
 
-shell_logger = None
-api_logger = None
 
 def color_me(color):
     RESET_SEQ = "\033[0m"
@@ -49,11 +47,8 @@ class ColoredFormatter(logging.Formatter):
         return res
 
 
-def setup_loggers(def_level=logging.DEBUG, log_fname=None):
-    global shell_logger
-    global api_logger
-
-    logger = logging.getLogger('spectra')
+def setup_loggers(name, def_level=logging.DEBUG, log_fname=None):
+    logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler()
     sh.setLevel(def_level)
@@ -64,7 +59,7 @@ def setup_loggers(def_level=logging.DEBUG, log_fname=None):
     sh.setFormatter(colored_formatter)
     logger.addHandler(sh)
 
-    logger_api = logging.getLogger("spectra.inspector")
+    logger_api = logging.getLogger(name + ".api")
 
     if log_fname is not None:
         fh = logging.FileHandler(log_fname)
@@ -80,5 +75,4 @@ def setup_loggers(def_level=logging.DEBUG, log_fname=None):
     logger_api.addHandler(sh)
     logger_api.setLevel(logging.WARNING)
 
-    shell_logger = logger
-    api_logger = logger_api
+    return logger, logger_api

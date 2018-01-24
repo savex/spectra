@@ -6,7 +6,7 @@ from spectra.runners.local_runner import LocalRunner
 
 
 _localtargets = ['local', 'localhost']
-_parsers =spectra.resourse_parsers
+_parsers = spectra.resourse_parsers
 
 
 class RunnerManager(object):

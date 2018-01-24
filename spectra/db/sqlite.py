@@ -1,6 +1,6 @@
 import sqlite3
 
-from spectra.utils.config_file import DBConfig
+from utils.config_file import DBConfig
 
 db_config = DBConfig()
 
