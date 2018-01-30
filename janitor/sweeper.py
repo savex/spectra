@@ -2,7 +2,7 @@ import re
 
 from subprocess import Popen, PIPE
 
-from common import logger, logger_cli
+from common import logger
 from utils.config import ConfigFileBase
 
 _list_action_label = "list_action"
@@ -32,26 +32,39 @@ class Sweeper(ConfigFileBase):
         # initialize all sections
         self.sweep_items = {}
 
-        _item = {}
         sweep_items_list = self._config.sections()
+        sweep_items_list.remove(section_name)
         for sweep_item in sweep_items_list:
-            _item[_list_action_label] = self._config.get(
+            _item = {}
+            _list_action_cmd = self._config.get(
                 sweep_item,
                 _list_action_label
             )
-            _item[_sweep_action_label] = self._config.get(
+            _sweep_action_cmd = self._config.get(
                 sweep_item,
                 _sweep_action_label
             )
-            _item['output'] = None
-            _item['error'] = None
-            _item['return_code'] = None
+
+            _item[_list_action_label] = {}
+            _item[_sweep_action_label] = {}
+
+            _item[_list_action_label]["cmd"] = _list_action_cmd
+            _item[_list_action_label]['output'] = None
+            _item[_list_action_label]['error'] = None
+            _item[_list_action_label]['return_code'] = None
+
+            _item['data'] = None
+
+            _item[_sweep_action_label]["cmd"] = _sweep_action_cmd
+            _item[_sweep_action_label]["pool"] = {}
 
             self.sweep_items[sweep_item] = _item
 
     @property
     def sections_list(self):
-        return self.sweep_items.keys().sort()
+        _keys = self.sweep_items.keys()
+        _keys.sort()
+        return _keys
 
     @property
     def list_actions(self):
@@ -63,23 +76,25 @@ class Sweeper(ConfigFileBase):
         return ([self.sweep_items[key][_sweep_action_label]] for key in
                 self.sweep_items.keys())
 
-    def list_sections(self):
-        _list = self.sweep_items.keys()
-        _list.sort()
-        return list(_list)
+    def get_section_data(self, section):
+        return self.sweep_items[section]["data"]
 
     @staticmethod
     def _action_process(cmd):
-        logger.debug("Running process: '{}'".format(cmd))
-        sweep_process = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        logger.debug("...cmd: '{}'".format(cmd))
+        _cmd = cmd.split()
+        sweep_process = Popen(_cmd, stdout=PIPE, stderr=PIPE)
         _output, _err = sweep_process.communicate()
         _rc = sweep_process.returncode
 
         # log it
-        logger_api.debug(
-            "Output: {}\n"
-            "Error: {}\n"
+        logger.debug(
+            "process [{}] '{}' returned\n"
+            "--- start output ---\n{}\n--- end output ---\n"
+            "Error: '{}'\n"
             "Return code: {}".format(
+                sweep_process.pid,
+                cmd,
                 _output,
                 _err,
                 _rc
@@ -89,9 +104,21 @@ class Sweeper(ConfigFileBase):
 
     def _do_list_action(self, section):
         # execute the list action
-        return self._action_process(
-            self.sweep_items[section][_list_action_label]
+
+        _out, _err, _rc = self._action_process(
+            self.sweep_items[section][_list_action_label]["cmd"]
         )
+
+        # save it
+        self.sweep_items[section][_list_action_label]["output"] = _out
+        self.sweep_items[section][_list_action_label]["error"] = _err
+        self.sweep_items[section][_list_action_label]["return_code"] = _rc
+
+        # Handle result
+        _data = _out.splitlines()
+        self.sweep_items[section]["data"] = _data
+
+        return _rc
 
     def _do_sweep_action(self, section):
         # execute the list action
@@ -101,16 +128,20 @@ class Sweeper(ConfigFileBase):
 
     def _do_filter_action(self, section):
         # filter data set
-        _data = self.sweep_items[section]["output"]
-        for data_item in _data:
+        _data = []
+        _raw_data = self.sweep_items[section]["data"]
+        for data_item in _raw_data:
             logger.debug("About to apply filter for '{}'".format(
                 data_item
             ))
             _filtered_data_item = self.common_filter.match(data_item)
-            logger.debug("..filtered value '{}'".format(
-                _filtered_data_item
-            ))
-            data_item = _filtered_data_item
+            if _filtered_data_item is not None:
+                logger.debug("..matched value '{}'".format(
+                    _filtered_data_item.string
+                ))
+                _data.append(_filtered_data_item.string)
+
+        self.sweep_items[section]["data"] = _data
 
         return
 
@@ -121,18 +152,19 @@ class Sweeper(ConfigFileBase):
             _sections.sort()
             logger.info("...{} sections total".format(_sections.__len__()))
 
-            # use gevent to generate subprocess
-            pass
+            # TODO: use gevent to generate subprocess
+            for index in range(len(_sections)):
+                _section = _sections[index]
+                logger.debug("...running action '{}' for section '{}'".format(
+                    str(action.__name__),
+                    _section
+                ))
+                action(_section)
 
             logger.info("...done")
         else:
             logger.info("--> {}".format(section))
-            _out, _err, _rc = action(section)
-
-            # save it
-            self.sweep_items[section]["output"] = _out
-            self.sweep_items[section]["error"] = _err
-            self.sweep_items[section]["return_code"] = _rc
+            action(section)
 
     def list_action(self, section=None):
         # get data lists for section
@@ -153,7 +185,7 @@ class Sweeper(ConfigFileBase):
 
         return
 
-    def filter_action(self, section=None, filter_regex=None):
+    def filter_action(self, section=None):
         # Do filter action according to selected filter
         logger.info("Filter action started")
         self.do_action(self._do_filter_action, section=section)

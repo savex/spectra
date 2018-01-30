@@ -37,7 +37,7 @@ def sweeper_cli():
     parser.add_argument(
         "-l",
         "--list-sections",
-        action="store_true", default=True,
+        action="store_true", default=False,
         help="List sections from the profile, preserve order of execution"
     )
 
@@ -72,9 +72,13 @@ def sweeper_cli():
 
     if args.list_sections:
         # only list sections
-        log.info("Sections available in profile '{}'".format(args.profile))
+        logger_cli.info("Sections available in profile '{}'".format(
+            args.profile
+        ))
         for section in sweep.sections_list:
-            log.info("# {}".format(section))
+            logger_cli.info("# {}".format(section))
+
+        # exit
         return
 
     # TODO: add per-section execution parameter and handler
@@ -85,6 +89,14 @@ def sweeper_cli():
     sweep.filter_action()
 
     # Log collected data stats
+    if args.stat_only:
+        logger_cli.info("Stats for each section")
+        for section in sweep.sections_list:
+            _section_data = sweep.get_section_data(section)
+            logger_cli.info("{}: {}".format(
+                section,
+                len(_section_data)
+            ))
 
     # Do clean actions
 

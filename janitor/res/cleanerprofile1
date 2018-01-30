@@ -1,17 +1,17 @@
 [sweeper]
 preserve_order = True
-common_filter = "swp_"
+common_filter = .*.pyc.*$
 retry = 1
 concurrency = 1
 
 [files1]
 # bash command to get list of objects to clean
-list_action = "find . -maxdepth 1 -type f"
+list_action = find . -maxdepth 1 -type f
 # bash command to delete single object, brackets to mark argument placement
-sweep_action="file {}"
+sweep_action= file {}
 
 [folders1]
 # bash command to get list of objects to clean
-list_action = "find . -maxdepth 1 -type d"
+list_action = find . -maxdepth 1 -type d
 # bash command to delete single object, brackets to mark argument placement
-sweep_action="file {}"
+sweep_action= file {}
