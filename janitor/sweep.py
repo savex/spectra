@@ -2,7 +2,8 @@ import os
 import sys
 import argparse
 
-import janitor
+from common import logger, logger_api
+from sweeper import Sweeper
 
 pkg_dir = os.path.dirname(__file__)
 pkg_dir = os.path.normpath(pkg_dir)
@@ -26,12 +27,19 @@ def help_message():
 # Main
 def sweeper_cli():
     _title = "Janitor:Sweeper CLI util"
-    parser = MyParser(prog=_title)
+    _cmd = "sweeper"
+    parser = MyParser(prog=_cmd)
 
-    log = janitor.utils.logger.shell_logger
-    log.info(_title)
+    logger.info(_title)
 
     # arguments
+    parser.add_argument(
+        "-l",
+        "--list-sections",
+        action="store_true", default=True,
+        help="List sections from the profile, preserve order of execution"
+    )
+
     parser.add_argument(
         "-s",
         "--stat-only",
@@ -46,6 +54,12 @@ def sweeper_cli():
     )
 
     parser.add_argument(
+        "-f",
+        "--filter-regex",
+        default=None, help="Overide profile default filter"
+    )
+
+    parser.add_argument(
         'profile',
         help="Cleaning profile to execute"
     )
@@ -53,8 +67,21 @@ def sweeper_cli():
     args = parser.parse_args()
 
     # Load profile
+    sweep = Sweeper(args.filter_regex, args.profile)
 
+    if args.list_sections:
+        # only list sections
+        log.info("Sections available in profile '{}'".format(args.profile))
+        for section in sweep.sections_list:
+            log.info("# {}".format(section))
+        return
+
+    # TODO: add per-section execution parameter and handler
     # Collect all data
+    sweep.list_action()
+
+    # Filter data, override if corresponding parameter is set
+    sweep.filter_action()
 
     # Log collected data stats
 

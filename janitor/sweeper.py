@@ -1,6 +1,8 @@
+import re
+
 from subprocess import Popen, PIPE
 
-from janitor import logger, logger_api
+from common import logger, logger_api
 from utils.config_file import ConfigFileBase
 
 _list_action_label = "list_action"
@@ -8,12 +10,22 @@ _sweep_action_label = "sweep_action"
 
 
 class Sweeper(ConfigFileBase):
-    def __init__(self, section_name="sweeper", filepath=None):
+    def __init__(
+            self,
+            filter_regex,
+            filepath,
+            section_name="sweeper",
+    ):
         super(Sweeper, self).__init__(section_name, filepath=filepath)
 
         # load default values
         self.preserve_order = self.get_value("preserve_order")
-        self.common_filter = self.get_value("common_filter")
+
+        if filter_regex is not None:
+            self.common_filter = re.compile(filter_regex)
+        else:
+            self.common_filter = re.compile(self.get_value("common_filter"))
+
         self.retry_count = self.get_value("retry")
         self.action_concurrency = self.get_value("concurrency")
 
@@ -38,6 +50,10 @@ class Sweeper(ConfigFileBase):
             self.sweep_items[sweep_item] = _item
 
     @property
+    def sections_list(self):
+        return self.sweep_items.keys().sort()
+
+    @property
     def list_actions(self):
         return ([self.sweep_items[key][_list_action_label]] for key in
                 self.sweep_items.keys())
@@ -46,6 +62,11 @@ class Sweeper(ConfigFileBase):
     def sweep_actions(self):
         return ([self.sweep_items[key][_sweep_action_label]] for key in
                 self.sweep_items.keys())
+
+    def list_sections(self):
+        _list = self.sweep_items.keys()
+        _list.sort()
+        return list(_list)
 
     @staticmethod
     def _action_process(cmd):
@@ -77,6 +98,21 @@ class Sweeper(ConfigFileBase):
         return self._action_process(
             self.sweep_items[section][_sweep_action_label]
         )
+
+    def _do_filter_action(self, section):
+        # filter data set
+        _data = self.sweep_items[section]["output"]
+        for data_item in _data:
+            logger_api.debug("About to apply filter for '{}'".format(
+                data_item
+            ))
+            _filtered_data_item = self.common_filter.match(data_item)
+            logger_api.debug("..filtered value '{}'".format(
+                _filtered_data_item
+            ))
+            data_item = _filtered_data_item
+
+        return
 
     def do_action(self, action, section=None):
         if section is None:
@@ -114,5 +150,12 @@ class Sweeper(ConfigFileBase):
 
         # process return codes
         pass
+
+        return
+
+    def filter_action(self, section=None, filter_regex=None):
+        # Do filter action according to selected filter
+        logger.info("Filter action started")
+        self.do_action(self._do_filter_action, section=section)
 
         return

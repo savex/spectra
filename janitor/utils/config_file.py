@@ -5,7 +5,13 @@ pkg_dir = os.path.dirname(__file__)
 pkg_dir = os.path.join(pkg_dir, os.path.pardir, os.path.pardir)
 pkg_dir = os.path.normpath(pkg_dir)
 
-_default_config_path = os.path.join(pkg_dir, 'etc', 'inspector.conf')
+_default_config_path = os.path.join(pkg_dir, 'etc')
+_inspector_default_config_name = 'inspector.conf'
+
+_default_config = os.path.join(
+    _default_config_path,
+    _inspector_default_config_name
+)
 
 
 class ConfigFileBase(object):
@@ -20,7 +26,7 @@ class ConfigFileBase(object):
         if filepath is not None:
             self._config.read(self._ensure_abs_path(filepath))
         else:
-            self._config.read(_default_config_path)
+            self._config.read(_default_config)
 
     def force_reload_config(self, path):
         _path = self._ensure_abs_path(path)
@@ -50,8 +56,11 @@ class ConfigFileBase(object):
 
 
 class InspectorConfig(ConfigFileBase):
-    def __init__(self):
-        super(InspectorConfig, self).__init__("InspectorConfig")
+    def __init__(self, filename):
+        super(InspectorConfig, self).__init__(
+            "InspectorConfig",
+            filepath=filename
+        )
 
     def get_default_host_origin(self):
         # get path
@@ -95,8 +104,12 @@ class SSHConfig(ConfigFileBase):
     def get_options(self):
         return self.get_value("default_options")
 
+_default_config_file = os.path.join(
+    _default_config_path,
+    _inspector_default_config_name
+)
 
-inspector_config = InspectorConfig()
+inspector_config = InspectorConfig(_default_config_file)
 resource_parsers_config = ResourceParsersConfig()
 db_config = DBConfig()
 ssh_config = SSHConfig()

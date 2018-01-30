@@ -16,6 +16,7 @@ class ColoredFormatter(logging.Formatter):
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
     colors = {
+        'INFO': color_me(CYAN),
         'WARNING': color_me(YELLOW),
         'DEBUG': color_me(BLUE),
         'CRITICAL': color_me(YELLOW),
@@ -53,7 +54,7 @@ def setup_loggers(name, def_level=logging.DEBUG, log_fname=None):
     sh = logging.StreamHandler()
     sh.setLevel(def_level)
 
-    log_format = '%(asctime)s - %(levelname)s - %(name)-15s - %(message)s'
+    log_format = '%(message)s'
     colored_formatter = ColoredFormatter(log_format, datefmt="%H:%M:%S")
 
     sh.setFormatter(colored_formatter)
@@ -72,7 +73,7 @@ def setup_loggers(name, def_level=logging.DEBUG, log_fname=None):
     else:
         fh = None
 
-    logger_api.addHandler(sh)
-    logger_api.setLevel(logging.WARNING)
+    logger_api.addHandler(fh)
+    logger_api.setLevel(logging.DEBUG)
 
     return logger, logger_api
