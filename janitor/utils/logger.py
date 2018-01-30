@@ -49,31 +49,30 @@ class ColoredFormatter(logging.Formatter):
 
 
 def setup_loggers(name, def_level=logging.DEBUG, log_fname=None):
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
+
+    # Stream Handler
     sh = logging.StreamHandler()
     sh.setLevel(def_level)
-
     log_format = '%(message)s'
     colored_formatter = ColoredFormatter(log_format, datefmt="%H:%M:%S")
-
     sh.setFormatter(colored_formatter)
-    logger.addHandler(sh)
 
-    logger_api = logging.getLogger(name + ".api")
-
+    # File handler
     if log_fname is not None:
         fh = logging.FileHandler(log_fname)
         log_format = '%(asctime)s - %(levelname)8s - %(name)-15s - %(message)s'
         formatter = logging.Formatter(log_format, datefmt="%H:%M:%S")
         fh.setFormatter(formatter)
         fh.setLevel(logging.DEBUG)
-        logger.addHandler(fh)
-        logger_api.addHandler(fh)
     else:
         fh = None
 
-    logger_api.addHandler(fh)
-    logger_api.setLevel(logging.DEBUG)
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(fh)
 
-    return logger, logger_api
+    logger_cli = logging.getLogger(name + ".cli")
+    logger_cli.addHandler(sh)
+    logger_cli.setLevel(logging.DEBUG)
+
+    return logger, logger_cli

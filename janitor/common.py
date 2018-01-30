@@ -1,8 +1,7 @@
 import utils
-from sweeper_config import sweeper_config
 
 utils = utils
-logger, logger_api = utils.logger.setup_loggers(
+logger, logger_cli = utils.logger.setup_loggers(
     "janitor",
-    log_fname=sweeper_config.get_logfile_path()
+    log_fname=utils.config.sweeper.get_logfile_path()
 )

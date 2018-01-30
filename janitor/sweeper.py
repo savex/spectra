@@ -2,8 +2,8 @@ import re
 
 from subprocess import Popen, PIPE
 
-from common import logger, logger_api
-from utils.config_file import ConfigFileBase
+from common import logger, logger_cli
+from utils.config import ConfigFileBase
 
 _list_action_label = "list_action"
 _sweep_action_label = "sweep_action"
@@ -70,7 +70,7 @@ class Sweeper(ConfigFileBase):
 
     @staticmethod
     def _action_process(cmd):
-        logger_api.debug("Running process: '{}'".format(cmd))
+        logger.debug("Running process: '{}'".format(cmd))
         sweep_process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         _output, _err = sweep_process.communicate()
         _rc = sweep_process.returncode
@@ -103,11 +103,11 @@ class Sweeper(ConfigFileBase):
         # filter data set
         _data = self.sweep_items[section]["output"]
         for data_item in _data:
-            logger_api.debug("About to apply filter for '{}'".format(
+            logger.debug("About to apply filter for '{}'".format(
                 data_item
             ))
             _filtered_data_item = self.common_filter.match(data_item)
-            logger_api.debug("..filtered value '{}'".format(
+            logger.debug("..filtered value '{}'".format(
                 _filtered_data_item
             ))
             data_item = _filtered_data_item

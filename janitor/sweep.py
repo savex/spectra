@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 
-from common import logger, logger_api
+from common import logger, logger_cli
 from sweeper import Sweeper
 
 pkg_dir = os.path.dirname(__file__)
@@ -30,7 +30,8 @@ def sweeper_cli():
     _cmd = "sweeper"
     parser = MyParser(prog=_cmd)
 
-    logger.info(_title)
+    logger_cli.info(_title)
+    logger.info("=========> Sweep execution started")
 
     # arguments
     parser.add_argument(
