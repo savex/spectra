@@ -1,5 +1,6 @@
 import re
 
+from time import sleep
 from subprocess import Popen, PIPE
 
 from common import logger, logger_cli
@@ -27,6 +28,7 @@ class Sweeper(ConfigFileBase):
             self.common_filter = re.compile(self.get_value("common_filter"))
 
         self.retry_count = self.get_value("retry")
+        self.retry_timeout = self.get_value("timeout")
         self.action_concurrency = self.get_value("concurrency")
 
         # initialize all sections
@@ -142,7 +144,7 @@ class Sweeper(ConfigFileBase):
     def _do_sweep_action(self, section, item=None):
         # execute the sweep action with 'item' as a format param
         if item is None:
-            logger.warn("WARNING: empty item supplied. "
+            logger.warn("Empty item supplied. "
                         "Sweep action ignored for '{}'.".format(section))
             return
 
@@ -150,7 +152,26 @@ class Sweeper(ConfigFileBase):
         _cmd = self.sweep_items[section][_sweep_action_label]["cmd"]
         _cmd = _cmd.format(item)
         logger_cli.debug("+ '{}'".format(_cmd))
+
         _out, _err, _rc = self._action_process(_cmd)
+
+        # if error received, log it and retry
+        if _rc != 0:
+            # retry action
+            _retry_left = self.retry_count
+            while _retry_left > 0:
+                logger.warn(
+                    "About to retry sweep action in {}ms, "
+                    "{} retries left".format(
+                        self.retry_timeout,
+                        _retry_left
+                    )
+                )
+
+                sleep(self.retry_timeout)
+                _out, _err, _rc = self._action_process(_cmd)
+
+                _retry_left -= 1
 
         # store
         _pool = self._get_section_pool(section)

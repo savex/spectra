@@ -5,7 +5,8 @@ presort_sections = True
 common_filter = .*.pyc.*$
 # retry attempts on failure
 retry = 1
-# concurrency for sweep action
+timeout = 500
+# concurrency for sweep action, not implemented
 concurrency = 1
 
 [files1]
