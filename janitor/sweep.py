@@ -44,7 +44,7 @@ def sweeper_cli():
     parser.add_argument(
         "-s",
         "--stat-only",
-        action="store_true", default=True,
+        action="store_true", default=False,
         help="List objects only, show counts next to each script entry"
     )
 
@@ -61,6 +61,11 @@ def sweeper_cli():
     )
 
     parser.add_argument(
+        "--section",
+        default=None, help="Execute actions from specific section of a profile"
+    )
+
+    parser.add_argument(
         'profile',
         help="Cleaning profile to execute"
     )
@@ -70,6 +75,8 @@ def sweeper_cli():
     # Load profile
     sweep = Sweeper(args.filter_regex, args.profile)
 
+    _sections = []
+
     if args.list_sections:
         # only list sections
         logger_cli.info("Sections available in profile '{}'".format(
@@ -77,29 +84,69 @@ def sweeper_cli():
         ))
         for section in sweep.sections_list:
             logger_cli.info("# {}".format(section))
+    elif args.section is not None:
+        _sections = [args.section]
+    else:
+        _sections = sweep.sweep_items_list
 
-        # exit
-        return
-
-    # TODO: add per-section execution parameter and handler
-    # Collect all data
-    sweep.list_action()
-
-    # Filter data, override if corresponding parameter is set
-    sweep.filter_action()
-
-    # Log collected data stats
-    if args.stat_only:
-        logger_cli.info("Stats for each section")
-        for section in sweep.sections_list:
-            _section_data = sweep.get_section_data(section)
-            logger_cli.info("{}: {}".format(
-                section,
-                len(_section_data)
+    # do main flow
+    while len(_sections) > 0:
+        _section = _sections.pop(0)
+        logger_cli.info("\n# {}".format(_section))
+        # Collect all data
+        rc = sweep.list_action(_section)
+        if rc != 0:
+            logger_cli.error("\t({}) '{}'\n\tERROR: {}".format(
+                rc,
+                sweep.get_section_list_cmd(_section),
+                sweep.get_section_list_error(_section)
+            ))
+        else:
+            _all_data = sweep.get_section_data(_section)
+            # Filter data, override if corresponding parameter is set
+            sweep.filter_action(_section)
+            _filtered_data = sweep.get_section_data(_section)
+            _count = len(_filtered_data)
+            logger_cli.info("# listed {}, matched {}.".format(
+                len(_all_data),
+                _count
             ))
 
-    # Do clean actions
+            # Log collected data stats
+            if args.stat_only:
+                break
+            else:
+                for _data_item in _filtered_data:
+                    logger_cli.info("# {}: {}".format(
+                        _count,
+                        _data_item
+                    ))
 
+                    if args.sweep:
+                        # Do sweep actions
+                        rc = sweep.sweep_action(_section, item=_data_item)
+                        if rc != 0:
+                            logger_cli.error("\t({}) '{}'\n\tERROR: {}".format(
+                                rc,
+                                sweep.get_section_sweep_cmd(
+                                    _section,
+                                    _data_item
+                                ),
+                                sweep.get_section_sweep_error(
+                                    _section,
+                                    _data_item
+                                )
+                            ))
+                        else:
+                            logger_cli.info("{}".format(
+                                sweep.get_section_sweep_output(
+                                    _section,
+                                    _data_item
+                                )
+                            ))
+                    _count -= 1
+
+    logger_cli.info("\nDone")
     return
 
 # Entry

@@ -2,7 +2,7 @@ import re
 
 from subprocess import Popen, PIPE
 
-from common import logger
+from common import logger, logger_cli
 from utils.config import ConfigFileBase
 
 _list_action_label = "list_action"
@@ -19,7 +19,7 @@ class Sweeper(ConfigFileBase):
         super(Sweeper, self).__init__(section_name, filepath=filepath)
 
         # load default values
-        self.preserve_order = self.get_value("preserve_order")
+        self.presort_sections = self.get_value("presort_sections")
 
         if filter_regex is not None:
             self.common_filter = re.compile(filter_regex)
@@ -60,24 +60,39 @@ class Sweeper(ConfigFileBase):
 
             self.sweep_items[sweep_item] = _item
 
+        self.sweep_items_list = sweep_items_list
+        if self.presort_sections:
+            self.sweep_items_list.sort()
+
     @property
     def sections_list(self):
         _keys = self.sweep_items.keys()
         _keys.sort()
         return _keys
 
-    @property
-    def list_actions(self):
-        return ([self.sweep_items[key][_list_action_label]] for key in
-                self.sweep_items.keys())
+    def _get(self, section, action, item):
+        return self.sweep_items[section][action][item]
 
-    @property
-    def sweep_actions(self):
-        return ([self.sweep_items[key][_sweep_action_label]] for key in
-                self.sweep_items.keys())
+    def _get_section_pool(self, section):
+        return self._get(section, _sweep_action_label, "pool")
 
     def get_section_data(self, section):
         return self.sweep_items[section]["data"]
+
+    def get_section_list_error(self, section):
+        return self._get(section, _list_action_label, "error")
+
+    def get_section_list_cmd(self, section):
+        return self._get(section, _list_action_label, "cmd")
+
+    def get_section_sweep_output(self, section, data_item):
+        return self._get_section_pool(section)[data_item]["item_output"]
+
+    def get_section_sweep_error(self, section, data_item):
+        return self._get_section_pool(section)[data_item]["item_error"]
+
+    def get_section_sweep_cmd(self, section, data_item):
+        return self._get_section_pool(section)[data_item]["item_cmd"]
 
     @staticmethod
     def _action_process(cmd):
@@ -115,16 +130,37 @@ class Sweeper(ConfigFileBase):
         self.sweep_items[section][_list_action_label]["return_code"] = _rc
 
         # Handle result
-        _data = _out.splitlines()
-        self.sweep_items[section]["data"] = _data
+        if _rc != 0:
+            logger.debug("Non-zero exit code returned. No data will be saved")
+        else:
+            # save data
+            _data = _out.splitlines()
+            self.sweep_items[section]["data"] = _data
 
         return _rc
 
-    def _do_sweep_action(self, section):
-        # execute the list action
-        return self._action_process(
-            self.sweep_items[section][_sweep_action_label]
-        )
+    def _do_sweep_action(self, section, item=None):
+        # execute the sweep action with 'item' as a format param
+        if item is None:
+            logger.warn("WARNING: empty item supplied. "
+                        "Sweep action ignored for '{}'.".format(section))
+            return
+
+        logger.debug("Sweep action for item '{}'".format(item))
+        _cmd = self.sweep_items[section][_sweep_action_label]["cmd"]
+        _cmd = _cmd.format(item)
+        logger_cli.debug("+ '{}'".format(_cmd))
+        _out, _err, _rc = self._action_process(_cmd)
+
+        # store
+        _pool = self._get_section_pool(section)
+        _pool[item] = {}
+        _pool[item]["item_cmd"] = _cmd
+        _pool[item]["item_output"] = _out
+        _pool[item]["item_error"] = _err
+        _pool[item]["item_return_code"] = _rc
+
+        return _rc
 
     def _do_filter_action(self, section):
         # filter data set
@@ -141,11 +177,13 @@ class Sweeper(ConfigFileBase):
                 ))
                 _data.append(_filtered_data_item.string)
 
+        # save filtered list
         self.sweep_items[section]["data"] = _data
 
         return
 
-    def do_action(self, action, section=None):
+    def do_action(self, action, section=None, **kwargs):
+        rc = 0
         if section is None:
             # Do all actions in order
             _sections = self.sweep_items.keys()
@@ -159,35 +197,36 @@ class Sweeper(ConfigFileBase):
                     str(action.__name__),
                     _section
                 ))
-                action(_section)
+                rc = action(_section, **kwargs)
 
             logger.info("...done")
         else:
             logger.info("--> {}".format(section))
-            action(section)
+            rc = action(section, **kwargs)
+
+        return rc
 
     def list_action(self, section=None):
         # get data lists for section
         logger.info("List action started")
-        self.do_action(self._do_list_action, section=section)
+        return self.do_action(
+            self._do_list_action,
+            section=section
+        )
 
-        # parse output
-        pass
-
-        return
-
-    def sweep_action(self, section=None):
+    def sweep_action(self, section=None, item=None):
+        # Do sweep action for data item given, None is handled deeper
         logger.info("Sweep action started")
-        self.do_action(self._do_sweep_action, section=section)
-
-        # process return codes
-        pass
-
-        return
+        return self.do_action(
+            self._do_sweep_action,
+            section=section,
+            item=item
+        )
 
     def filter_action(self, section=None):
         # Do filter action according to selected filter
         logger.info("Filter action started")
-        self.do_action(self._do_filter_action, section=section)
-
-        return
+        return self.do_action(
+            self._do_filter_action,
+            section=section
+        )

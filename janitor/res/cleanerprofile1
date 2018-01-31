@@ -1,7 +1,11 @@
 [sweeper]
-preserve_order = True
+# sort sections before use
+presort_sections = True
+# default regex filter
 common_filter = .*.pyc.*$
+# retry attempts on failure
 retry = 1
+# concurrency for sweep action
 concurrency = 1
 
 [files1]
