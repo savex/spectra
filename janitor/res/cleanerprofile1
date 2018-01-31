@@ -4,8 +4,8 @@ presort_sections = True
 # default regex filter
 common_filter = .*.pyc.*$
 # retry attempts on failure
-retry = 1
-timeout = 500
+retry = 3
+timeout = 2000
 # concurrency for sweep action, not implemented
 concurrency = 1
 

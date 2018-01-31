@@ -20,16 +20,19 @@ class Sweeper(ConfigFileBase):
         super(Sweeper, self).__init__(section_name, filepath=filepath)
 
         # load default values
-        self.presort_sections = self.get_value("presort_sections")
+        self.presort_sections = self.get_value(
+            "presort_sections",
+            value_type=bool
+        )
 
         if filter_regex is not None:
             self.common_filter = re.compile(filter_regex)
         else:
             self.common_filter = re.compile(self.get_value("common_filter"))
 
-        self.retry_count = self.get_value("retry")
-        self.retry_timeout = self.get_value("timeout")
-        self.action_concurrency = self.get_value("concurrency")
+        self.retry_count = self.get_value("retry", value_type=int)
+        self.retry_timeout = self.get_value("timeout", value_type=float)
+        self.action_concurrency = self.get_value("concurrency", value_type=int)
 
         # initialize all sections
         self.sweep_items = {}
@@ -155,6 +158,9 @@ class Sweeper(ConfigFileBase):
 
         _out, _err, _rc = self._action_process(_cmd)
 
+        # handle specific RC
+        #_rc = 1
+
         # if error received, log it and retry
         if _rc != 0:
             # retry action
@@ -168,7 +174,7 @@ class Sweeper(ConfigFileBase):
                     )
                 )
 
-                sleep(self.retry_timeout)
+                sleep(self.retry_timeout / 1000)
                 _out, _err, _rc = self._action_process(_cmd)
 
                 _retry_left -= 1

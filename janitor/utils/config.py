@@ -52,8 +52,11 @@ class ConfigFileBase(object):
         else:
             return False
 
-    def get_value(self, key):
-        return self._config.get(self._section_name, key)
+    def get_value(self, key, value_type=None):
+        if value_type is not None:
+            return value_type(self._config.get(self._section_name, key))
+        else:
+            return self._config.get(self._section_name, key)
 
 
 class SweeperConfig(ConfigFileBase):
