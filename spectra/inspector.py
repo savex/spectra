@@ -3,6 +3,9 @@ import sys
 import argparse
 
 import spectra
+from common import logger, logger_cli
+
+import spectra.resourse_parsers.fileinfo as fileinfo
 
 from spectra.runners.runner_manager import RunnerManager
 from spectra.db.sqlite import DBStorage
@@ -33,8 +36,10 @@ def inspector_cli_main():
     _title = "Spectra:Inspector CLI util"
     parser = MyParser(prog=_title)
 
-    log = spectra.utils.logger.shell_logger
-    log.info(_title)
+    logger_cli.info(_title)
+
+    # debug
+    info = fileinfo.get_file_info('/Users/savex/.zshrc')
 
     # arguments
 

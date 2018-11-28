@@ -2,7 +2,7 @@ import ConfigParser
 import os
 
 pkg_dir = os.path.dirname(__file__)
-pkg_dir = os.path.join(pkg_dir, os.path.pardir, os.path.pardir)
+pkg_dir = os.path.join(pkg_dir, os.path.pardir)
 pkg_dir = os.path.normpath(pkg_dir)
 
 _default_config_path = os.path.join(pkg_dir, 'etc')
@@ -72,6 +72,9 @@ class InspectorConfig(ConfigFileBase):
     def get_logfile_path(self):
         _path = self.get_value('logfile')
         return self._ensure_abs_path(_path)
+
+    def get_default_time_format(self):
+        return self.get_value('time_format')
 
 
 class ResourceParsersConfig(ConfigFileBase):
